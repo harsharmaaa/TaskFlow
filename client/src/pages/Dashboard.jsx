@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchBoards, addBoard, clearBoardError } from '../store/boardSlice';
 import Navbar from '../components/Navbar';
 import BoardCard from '../components/BoardCard';
+import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 function Dashboard() {
@@ -82,24 +83,7 @@ function Dashboard() {
 
         {/* Boards List Grid */}
         {isLoading && boards.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Skeletal placeholders */}
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="p-6 rounded-2xl border border-white/5 bg-white/[0.01] h-[160px] flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="h-4 w-[60%] rounded bg-slate-800 animate-pulse" />
-                  <div className="h-3 w-[40%] rounded bg-slate-800 animate-pulse" />
-                </div>
-                <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                  <div className="h-3 w-[20%] rounded bg-slate-800 animate-pulse" />
-                  <div className="flex -space-x-1">
-                    <div className="w-6 h-6 rounded-full bg-slate-800 animate-pulse" />
-                    <div className="w-6 h-6 rounded-full bg-slate-800 animate-pulse" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <LoadingSpinner message="Fetching workspaces..." />
         ) : boards.length === 0 ? (
           /* Empty Workspace State */
           <div className="flex flex-col items-center justify-center p-12 rounded-3xl border border-dashed border-white/10 bg-white/[0.01] text-center min-h-[300px] transition-all">

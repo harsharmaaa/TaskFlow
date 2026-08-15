@@ -9,6 +9,9 @@ const {
   updateMemberRole,
   removeMember,
 } = require('../controllers/boardController');
+const {
+  getBoardActivity,
+} = require('../controllers/activityController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkBoardRole } = require('../middleware/roleMiddleware');
 
@@ -31,5 +34,9 @@ router.route('/:id/members')
 router.route('/:id/members/:userId')
   .put(protect, checkBoardRole('Admin'), updateMemberRole)
   .delete(protect, checkBoardRole('Admin'), removeMember);
+
+// Board Activity Feed Route
+router.route('/:id/activity')
+  .get(protect, checkBoardRole('Member'), getBoardActivity);
 
 module.exports = router;

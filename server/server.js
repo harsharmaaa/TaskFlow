@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const boardRoutes = require('./routes/boardRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
 
@@ -22,10 +23,13 @@ const server = http.createServer(app);
 
 // Configure CORS origin from env or fallback to local Vite dev server
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+const clientOrigins = clientUrl.includes(',')
+  ? clientUrl.split(',').map((o) => o.trim())
+  : clientUrl;
 
 // Express Middleware
 app.use(cors({
-  origin: clientUrl,
+  origin: clientOrigins,
   credentials: true
 }));
 app.use(express.json());
@@ -34,7 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 // Attach Socket.io to the HTTP server with CORS configurations
 const io = new Server(server, {
   cors: {
-    origin: clientUrl,
+    origin: clientOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -56,6 +60,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

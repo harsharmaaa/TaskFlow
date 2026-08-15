@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 
 // Pages and Components
 import Landing from './pages/Landing';
@@ -14,14 +13,6 @@ import PrivateRoute from './components/PrivateRoute';
 function App() {
   return (
     <Router>
-      {/* React Hot Toast provider */}
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          className: 'glass-effect border border-white/10 !bg-slate-900 !text-slate-100 text-sm rounded-xl',
-          duration: 3000,
-        }}
-      />
       
       <Routes>
         {/* Public Routes */}

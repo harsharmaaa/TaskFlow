@@ -121,7 +121,7 @@ function TeamMembers() {
             className="p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95 flex-shrink-0"
             title="Back to Board Canvas"
           >
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
@@ -174,7 +174,7 @@ function TeamMembers() {
                   const isBusy = busyMemberId === mUser._id;
 
                   return (
-                    <div key={mUser._id} className="py-4.5 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
+                    <div key={mUser._id} className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
                       
                       {/* Member Info & Avatar */}
                       <div className="flex items-center gap-3 min-w-0">

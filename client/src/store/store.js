@@ -2,18 +2,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import boardReducer from './boardSlice';
 import taskReducer from './taskSlice';
-
-// Temporary placeholder reducers to satisfy slice dependencies for future steps
-const placeholderReducer = (state = { items: [], loading: false, error: null }, action) => {
-  return state;
-};
+import notificationReducer from './notificationSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     board: boardReducer,
     task: taskReducer,
-    notification: placeholderReducer,
+    notification: notificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

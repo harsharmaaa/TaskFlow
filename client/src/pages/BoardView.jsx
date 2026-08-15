@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -20,6 +20,8 @@ import boardService from '../services/boardService';
 import useSocket from '../hooks/useSocket';
 import Navbar from '../components/Navbar';
 import Column from '../components/Column';
+import SearchFilterBar from '../components/SearchFilterBar';
+import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 function BoardView() {
@@ -29,8 +31,66 @@ function BoardView() {
   const { user } = useSelector((state) => state.auth);
   const { currentBoard, isLoading, error, presence } = useSelector((state) => state.board);
 
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [selectedLabels, setSelectedLabels] = useState([]);
+
   // Invoke our custom Socket.io integration hook
   useSocket(id);
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setAssigneeFilter('all');
+    setPriorityFilter('all');
+    setSelectedLabels([]);
+  };
+
+  const allLabels = Array.from(
+    new Set(
+      (currentBoard?.columns || [])
+        .flatMap((col) => col.tasks || [])
+        .flatMap((task) => task.labels || [])
+    )
+  ).filter(Boolean);
+
+  const getFilteredTasksForColumn = (col) => {
+    return (col.tasks || []).filter((task) => {
+      if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      if (assigneeFilter !== 'all') {
+        if (assigneeFilter === 'unassigned') {
+          if (task.assignee) return false;
+        } else {
+          const taskAssigneeId = task.assignee?._id || task.assignee;
+          if (!taskAssigneeId || taskAssigneeId.toString() !== assigneeFilter) {
+            return false;
+          }
+        }
+      }
+      if (priorityFilter !== 'all' && task.priority !== priorityFilter) {
+        return false;
+      }
+      if (selectedLabels.length > 0) {
+        const taskLabels = task.labels || [];
+        const matchesAll = selectedLabels.every((label) => taskLabels.includes(label));
+        if (!matchesAll) return false;
+      }
+      return true;
+    });
+  };
+
+  const totalMatches = currentBoard?.columns
+    ? currentBoard.columns.reduce((sum, col) => sum + getFilteredTasksForColumn(col).length, 0)
+    : 0;
+
+  const hasActiveFilters =
+    searchQuery ||
+    assigneeFilter !== 'all' ||
+    priorityFilter !== 'all' ||
+    selectedLabels.length > 0;
 
   // Set up pointer and touch sensors with activation constraints
   const pointerSensor = useSensor(PointerSensor, {
@@ -183,7 +243,7 @@ function BoardView() {
               className="p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95 flex-shrink-0"
               title="Back to Workspaces"
             >
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
@@ -222,7 +282,7 @@ function BoardView() {
                     {presence.map((activeUser, idx) => (
                       <div
                         key={activeUser.socketId || idx}
-                        className="w-6.5 h-6.5 rounded-full border border-slate-950 flex items-center justify-center font-bold text-white text-[8px] transform hover:-translate-y-1 transition-transform cursor-help shadow-sm"
+                        className="w-6 h-6 rounded-full border border-slate-950 flex items-center justify-center font-bold text-white text-[8px] transform hover:-translate-y-1 transition-transform cursor-help shadow-sm"
                         style={{ backgroundColor: getMemberColor(activeUser) }}
                         title={`${activeUser.name} is active`}
                       >
@@ -242,7 +302,7 @@ function BoardView() {
                     return (
                       <div
                         key={memberUser._id || idx}
-                        className="w-7.5 h-7.5 rounded-full border-2 border-slate-950 flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help"
+                        className="w-7 h-7 rounded-full border-2 border-slate-950 flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help"
                         style={{ backgroundColor: memberUser.avatarColor || '#6366F1' }}
                         title={`${memberUser.name} (${member.role})`}
                       >
@@ -274,16 +334,34 @@ function BoardView() {
           )}
         </div>
 
+        {/* Search & Filter Bar */}
+        {currentBoard && !isLoading && (
+          <SearchFilterBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            assigneeFilter={assigneeFilter}
+            setAssigneeFilter={setAssigneeFilter}
+            priorityFilter={priorityFilter}
+            setPriorityFilter={setPriorityFilter}
+            selectedLabels={selectedLabels}
+            setSelectedLabels={setSelectedLabels}
+            onClear={handleClearFilters}
+            members={currentBoard.members || []}
+            allLabels={allLabels}
+          />
+        )}
+
+        {/* Matches Count */}
+        {currentBoard && !isLoading && hasActiveFilters && (
+          <div className="text-xs text-slate-400 mb-4 select-none px-1">
+            🎯 <span className="text-brand-400 font-bold">{totalMatches}</span> task{totalMatches === 1 ? '' : 's'} match{totalMatches === 1 ? 'es' : ''} your active filters
+          </div>
+        )}
+
         {/* Board Columns Scroll Area */}
         <div className="flex-1 overflow-x-auto pb-4 scrollbar-thin flex items-start gap-6 select-none min-h-[300px]">
           {isLoading && !currentBoard ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 bg-white/[0.01] border border-white/5 rounded-3xl min-h-[400px]">
-              <svg className="animate-spin h-8 w-8 text-brand-500" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <p className="text-sm text-slate-400">Loading board canvas...</p>
-            </div>
+            <LoadingSpinner message="Loading board canvas..." />
           ) : error ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl border border-white/5 bg-white/[0.01] text-center py-20 min-h-[400px]">
               <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 text-xl mb-4">⚠️</div>
@@ -305,7 +383,7 @@ function BoardView() {
                   <Column
                     key={col._id}
                     column={col}
-                    tasks={col.tasks || []}
+                    tasks={getFilteredTasksForColumn(col)}
                   />
                 ))}
               </div>

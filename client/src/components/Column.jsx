@@ -89,10 +89,17 @@ function Column({ column, tasks }) {
             <TaskCard key={task._id} task={task} />
           ))}
           {tasks.length === 0 && !isAdding && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-slate-600 text-center select-none min-h-[100px]">
-              <span className="text-lg">📭</span>
-              <span className="text-[10px] mt-1 font-medium">Empty Column</span>
-            </div>
+            column.tasks && column.tasks.length > 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-slate-500 text-center select-none min-h-[100px]">
+                <span className="text-lg">🔍</span>
+                <span className="text-[10px] mt-1 font-medium">No matching tasks</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-slate-600 text-center select-none min-h-[100px]">
+                <span className="text-lg">📭</span>
+                <span className="text-[10px] mt-1 font-medium">Empty Column</span>
+              </div>
+            )
           )}
         </div>
       </SortableContext>

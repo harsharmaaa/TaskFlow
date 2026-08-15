@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
+import NotificationBell from './NotificationBell';
 
 function Navbar() {
   const dispatch = useDispatch();
@@ -23,7 +24,7 @@ function Navbar() {
           {/* Logo and Brand */}
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="flex items-center justify-center w-8.5 h-8.5 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-500 shadow-md transform group-hover:rotate-6 transition-transform">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-500 shadow-md transform group-hover:rotate-6 transition-transform">
                 <span className="font-extrabold text-white text-base">T</span>
               </div>
               <span className="font-bold tracking-tight text-white group-hover:text-brand-400 transition-colors">
@@ -34,10 +35,14 @@ function Navbar() {
 
           {/* User Section & Actions */}
           <div className="flex items-center gap-4">
+            
+            {/* Notification Bell Center */}
+            <NotificationBell />
+
             {/* User Profile */}
             <div className="flex items-center gap-2.5">
               <div
-                className="w-8.5 h-8.5 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-inner select-none transition-transform hover:scale-105 duration-200"
+                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-inner select-none transition-transform hover:scale-105 duration-200"
                 style={{ backgroundColor: user?.avatarColor || '#6366F1' }}
               >
                 {getInitials(user?.name)}
@@ -51,7 +56,7 @@ function Navbar() {
             {/* Logout Trigger */}
             <button
               onClick={() => dispatch(logout())}
-              className="px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-rose-500/30 text-xs font-semibold hover:bg-rose-500/10 hover:text-rose-400 active:scale-95 transition-all duration-200"
+              className="px-4 py-1.5 rounded-lg border border-white/10 hover:border-rose-500/30 text-xs font-semibold hover:bg-rose-500/10 hover:text-rose-400 active:scale-95 transition-all duration-200"
             >
               Logout
             </button>

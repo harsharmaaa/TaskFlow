@@ -2,6 +2,9 @@ const asyncHandler = require('express-async-handler');
 const Comment = require('../models/Comment');
 const Task = require('../models/Task');
 const Board = require('../models/Board');
+const Notification = require('../models/Notification');
+const { emitToUser } = require('../sockets/socketHandler');
+const logActivity = require('../utils/logActivity');
 
 // @desc    Add a comment to a task
 // @route   POST /api/tasks/:id/comments
@@ -65,6 +68,15 @@ const addComment = asyncHandler(async (req, res) => {
   const populatedComment = await Comment.findById(comment._id)
     .populate('author', 'name email avatarColor');
 
+  // Log activity
+  await logActivity({
+    board: task.board,
+    task: task._id,
+    user: req.user._id,
+    action: 'add_comment',
+    details: 'added a comment to this task',
+  });
+
   // Emit real-time comment notification via Socket.io
   const io = req.app.get('io');
   if (io) {
@@ -72,6 +84,27 @@ const addComment = asyncHandler(async (req, res) => {
       taskId: task._id,
       comment: populatedComment,
     });
+
+    // Create notifications for mentioned users
+    if (mentions && mentions.length > 0) {
+      mentions.forEach(async (mentionedUserId) => {
+        // Exclude the author of the comment
+        if (mentionedUserId.toString() === req.user._id.toString()) return;
+
+        try {
+          const notification = await Notification.create({
+            recipient: mentionedUserId,
+            type: 'mentioned',
+            message: `${req.user.name} mentioned you in a comment`,
+            task: task._id,
+          });
+
+          emitToUser(io, mentionedUserId, 'notification', notification);
+        } catch (err) {
+          console.error('Failed to create notification for mention:', err.message);
+        }
+      });
+    }
   }
 
   res.status(201).json(populatedComment);

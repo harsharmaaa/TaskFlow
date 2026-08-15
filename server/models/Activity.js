@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
+  board: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Board',
+    required: true,
+  },
   task: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Task',
-    required: true,
+    required: false,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,

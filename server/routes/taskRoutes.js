@@ -10,6 +10,9 @@ const {
   addComment,
   getComments,
 } = require('../controllers/commentController');
+const {
+  getTaskActivity,
+} = require('../controllers/activityController');
 const { protect } = require('../middleware/authMiddleware');
 const { checkBoardRole } = require('../middleware/roleMiddleware');
 const multer = require('multer');
@@ -38,5 +41,9 @@ router.route('/:id/attachments')
 router.route('/:id/comments')
   .post(protect, checkBoardRole('Member'), addComment)
   .get(protect, checkBoardRole('Member'), getComments);
+
+// Task Activity Audit Log
+router.route('/:id/activity')
+  .get(protect, checkBoardRole('Member'), getTaskActivity);
 
 module.exports = router;

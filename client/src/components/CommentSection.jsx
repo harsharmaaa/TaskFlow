@@ -7,13 +7,21 @@ import toast from 'react-hot-toast';
 
 function CommentSection({ taskId }) {
   const { user } = useSelector((state) => state.auth);
-  
+  const { currentBoard } = useSelector((state) => state.board);
+  const members = currentBoard?.members || [];
+
   const [comments, setComments] = useState([]);
   const [newCommentText, setNewCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  // Autocomplete mentions state
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState('');
+  const [mentionIndex, setMentionIndex] = useState(-1);
+
   const commentsEndRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Fetch comments on mount & taskId changes
   useEffect(() => {
@@ -83,6 +91,51 @@ function CommentSection({ taskId }) {
     }
   };
 
+  const handleTextareaChange = (e) => {
+    const val = e.target.value;
+    setNewCommentText(val);
+
+    const selectionStart = e.target.selectionStart;
+    const textBeforeCursor = val.substring(0, selectionStart);
+
+    // Find last index of '@'
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+
+      // Autocomplete triggers only if there are no spaces or newlines after '@'
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+        setShowMentions(true);
+        setMentionFilter(textAfterAt);
+        setMentionIndex(lastAtIndex);
+        return;
+      }
+    }
+
+    setShowMentions(false);
+  };
+
+  const selectMention = (memberName) => {
+    const formattedName = memberName.replace(/\s+/g, '');
+    const before = newCommentText.substring(0, mentionIndex);
+    const selectionStart = textareaRef.current?.selectionStart || 0;
+    const after = newCommentText.substring(selectionStart);
+
+    const nextText = `${before}@${formattedName} `;
+    setNewCommentText(nextText + after);
+    setShowMentions(false);
+
+    // Reset cursor position to right after the mention
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const nextPos = nextText.length;
+        textareaRef.current.setSelectionRange(nextPos, nextPos);
+      }
+    }, 10);
+  };
+
   const getInitials = (name) => {
     if (!name) return 'U';
     const parts = name.split(' ');
@@ -110,6 +163,15 @@ function CommentSection({ taskId }) {
     });
   };
 
+  // Filter members list based on mentionFilter
+  const filteredMembers = members.filter((member) => {
+    const mUser = member.user || {};
+    return (
+      mUser.name &&
+      mUser.name.toLowerCase().includes(mentionFilter.toLowerCase())
+    );
+  });
+
   return (
     <div className="space-y-4 flex flex-col h-full">
       {/* Comments List Container */}
@@ -120,7 +182,7 @@ function CommentSection({ taskId }) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <span className="text-xs text-slate-500">Loading comments...</span>
+            <span className="text-xs text-slate-500 select-none">Loading comments...</span>
           </div>
         ) : comments.length === 0 ? (
           <div className="p-5 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-center text-xs text-slate-500 select-none">
@@ -141,7 +203,7 @@ function CommentSection({ taskId }) {
               >
                 {/* Author Initials Avatar */}
                 <div
-                  className="w-7.5 h-7.5 rounded-full flex items-center justify-center font-bold text-white text-[9px] select-none shadow-sm flex-shrink-0"
+                  className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-[9px] select-none shadow-sm flex-shrink-0"
                   style={{ backgroundColor: author.avatarColor || '#6366F1' }}
                   title={author.name}
                 >
@@ -178,12 +240,44 @@ function CommentSection({ taskId }) {
         <div ref={commentsEndRef} />
       </div>
 
-      {/* Comment Input Box Form */}
-      <form onSubmit={handleSubmit} className="flex gap-2 items-start mt-2">
+      {/* Comment Input Box Form with Autocomplete */}
+      <form onSubmit={handleSubmit} className="flex gap-2 items-start mt-2 relative">
+        
+        {/* Autocomplete Dropdown */}
+        {showMentions && filteredMembers.length > 0 && (
+          <div className="absolute bottom-full left-0 mb-2 w-60 rounded-xl bg-slate-900 border border-white/10 shadow-premium p-1.5 z-30 max-h-36 overflow-y-auto scrollbar-thin flex flex-col gap-1">
+            {filteredMembers.map((member) => {
+              const mUser = member.user || {};
+              return (
+                <button
+                  key={mUser._id}
+                  type="button"
+                  onClick={() => selectMention(mUser.name)}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-300 hover:text-white transition-all flex items-center gap-2"
+                >
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white text-[8px]"
+                    style={{ backgroundColor: mUser.avatarColor || '#6366F1' }}
+                  >
+                    {getInitials(mUser.name)}
+                  </div>
+                  <div className="truncate flex-1">
+                    <span className="font-semibold">{mUser.name}</span>
+                    <span className="text-[10px] text-slate-500 ml-1.5 select-none font-medium">
+                      @{mUser.email?.split('@')[0]}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <textarea
           rows="2"
+          ref={textareaRef}
           value={newCommentText}
-          onChange={(e) => setNewCommentText(e.target.value)}
+          onChange={handleTextareaChange}
           placeholder="Write a comment, use @name to mention..."
           disabled={isSubmitting}
           className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 focus:border-brand-500 focus:outline-none text-slate-200 text-xs placeholder-slate-600 resize-none transition-all duration-200 scrollbar-thin"

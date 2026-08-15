@@ -3,6 +3,7 @@ const Board = require('../models/Board');
 const Column = require('../models/Column');
 const Task = require('../models/Task');
 const User = require('../models/User');
+const logActivity = require('../utils/logActivity');
 
 // @desc    Create a new board
 // @route   POST /api/boards
@@ -180,6 +181,14 @@ const addMember = asyncHandler(async (req, res) => {
 
   await board.save();
 
+  // Log Activity
+  await logActivity({
+    board: board._id,
+    user: req.user._id,
+    action: 'add_member',
+    details: `Invited member: ${userToAdd.name} (${userToAdd.email})`,
+  });
+
   const updatedBoard = await Board.findById(board._id)
     .populate('owner', 'name email avatarColor')
     .populate('members.user', 'name email avatarColor');
@@ -219,6 +228,15 @@ const updateMemberRole = asyncHandler(async (req, res) => {
 
   member.role = role;
   await board.save();
+
+  // Log Activity
+  const modifiedUser = await User.findById(userId);
+  await logActivity({
+    board: board._id,
+    user: req.user._id,
+    action: 'update_member_role',
+    details: `Changed role of ${modifiedUser ? modifiedUser.name : 'member'} to ${role}`,
+  });
 
   const updatedBoard = await Board.findById(board._id)
     .populate('owner', 'name email avatarColor')
@@ -262,6 +280,15 @@ const removeMember = asyncHandler(async (req, res) => {
   );
 
   await board.save();
+
+  // Log Activity
+  const modifiedUser = await User.findById(userId);
+  await logActivity({
+    board: board._id,
+    user: req.user._id,
+    action: 'remove_member',
+    details: `Removed member: ${modifiedUser ? modifiedUser.name : 'User'}`,
+  });
 
   const updatedBoard = await Board.findById(board._id)
     .populate('owner', 'name email avatarColor')

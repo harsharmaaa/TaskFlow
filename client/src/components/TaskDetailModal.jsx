@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import AttachmentUpload from './AttachmentUpload';
 import CommentSection from './CommentSection';
+import ActivityLog from './ActivityLog';
 
 function TaskDetailModal({ task, isOpen, onClose }) {
   const dispatch = useDispatch();
@@ -158,12 +159,12 @@ function TaskDetailModal({ task, isOpen, onClose }) {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
     >
       {/* Modal Container */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl h-[85vh] bg-slate-900 border border-white/10 rounded-2xl shadow-premium flex flex-col overflow-hidden animate-scale-up"
+        className="w-full max-w-3xl h-full sm:h-[85vh] bg-slate-900 sm:border border-white/10 sm:rounded-2xl shadow-premium flex flex-col overflow-hidden animate-scale-up"
       >
         {/* Header Block */}
         <div className="p-6 border-b border-white/5 flex items-start justify-between gap-4">
@@ -251,14 +252,12 @@ function TaskDetailModal({ task, isOpen, onClose }) {
               <CommentSection taskId={task._id} />
             </div>
 
-            {/* Audit Logs Section Placeholder */}
+            {/* Audit Logs Section */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                📜 Activity Audit Log (Placeholder)
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 select-none">
+                📜 Activity Audit Log
               </h3>
-              <div className="p-4 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-center text-xs text-slate-500">
-                Full task audit trail listing coming on Day 15
-              </div>
+              <ActivityLog taskId={task._id} />
             </div>
 
           </div>

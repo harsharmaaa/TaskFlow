@@ -8,6 +8,8 @@ import {
   taskDeletedFromSocket,
   setPresence,
 } from '../store/boardSlice';
+import { notificationReceived } from '../store/notificationSlice';
+import toast from 'react-hot-toast';
 
 function useSocket(boardId) {
   const dispatch = useDispatch();
@@ -19,6 +21,9 @@ function useSocket(boardId) {
     // Connect socket with user auth context
     const token = user.token;
     const socket = connectSocket(token);
+
+    // Identify user for direct notifications
+    socket.emit('identify', user._id);
 
     // Join board room
     socket.emit('join_board', {
@@ -52,6 +57,16 @@ function useSocket(boardId) {
       dispatch(setPresence(users));
     });
 
+    // Private real-time notifications listener
+    socket.on('notification', (notification) => {
+      console.log('Live Sync: notification received', notification);
+      dispatch(notificationReceived(notification));
+      toast.success(notification.message, {
+        icon: '🔔',
+        duration: 4500,
+      });
+    });
+
     // Unmount cleanup: leave room, turn off listeners, and disconnect
     return () => {
       socket.emit('leave_board', { boardId });
@@ -61,6 +76,7 @@ function useSocket(boardId) {
       socket.off('task_moved');
       socket.off('task_deleted');
       socket.off('user_presence');
+      socket.off('notification');
       
       disconnectSocket();
     };

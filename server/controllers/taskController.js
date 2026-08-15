@@ -2,6 +2,10 @@ const asyncHandler = require('express-async-handler');
 const Task = require('../models/Task');
 const Column = require('../models/Column');
 const Activity = require('../models/Activity');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+const { emitToUser } = require('../sockets/socketHandler');
+const logActivity = require('../utils/logActivity');
 
 // @desc    Create a new task
 // @route   POST /api/tasks
@@ -42,6 +46,15 @@ const createTask = asyncHandler(async (req, res) => {
 
   const populatedTask = await Task.findById(task._id).populate('assignee', 'name email avatarColor');
 
+  // Log Activity
+  await logActivity({
+    board,
+    task: task._id,
+    user: req.user._id,
+    action: 'create_task',
+    details: `Created task: "${task.title}"`,
+  });
+
   const io = req.app.get('io');
   if (io) {
     io.to(`board_${board}`).emit('task_created', populatedTask);
@@ -63,6 +76,14 @@ const updateTask = asyncHandler(async (req, res) => {
     throw new Error('Task not found');
   }
 
+  const previousTaskState = {
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    dueDate: task.dueDate,
+  };
+  const previousAssignee = task.assignee ? task.assignee.toString() : null;
+
   // Update properties if provided
   if (title !== undefined) task.title = title;
   if (description !== undefined) task.description = description;
@@ -74,6 +95,54 @@ const updateTask = asyncHandler(async (req, res) => {
   await task.save();
 
   const populatedTask = await Task.findById(task._id).populate('assignee', 'name email avatarColor');
+
+  // Trigger Notification if assignee changed and is not self
+  if (assignee !== undefined) {
+    const newAssignee = task.assignee ? task.assignee.toString() : null;
+    if (newAssignee && newAssignee !== previousAssignee && newAssignee !== req.user._id.toString()) {
+      try {
+        const notification = await Notification.create({
+          recipient: newAssignee,
+          type: 'assigned',
+          message: `${req.user.name} assigned you to the task "${task.title}"`,
+          task: task._id,
+        });
+
+        const io = req.app.get('io');
+        emitToUser(io, newAssignee, 'notification', notification);
+      } catch (err) {
+        console.error('Failed to create assignment notification:', err.message);
+      }
+    }
+  }
+
+  // Log Activity based on what changed
+  const changes = [];
+  if (title !== undefined && title !== previousTaskState.title) changes.push(`changed title to "${title}"`);
+  if (description !== undefined && description !== previousTaskState.description) changes.push('updated description');
+  if (assignee !== undefined && assignee !== previousAssignee) {
+    if (assignee) {
+      const assignedUser = await User.findById(assignee);
+      changes.push(`assigned this task to ${assignedUser ? assignedUser.name : 'someone'}`);
+    } else {
+      changes.push('unassigned this task');
+    }
+  }
+  if (priority !== undefined && priority !== previousTaskState.priority) changes.push(`changed priority to ${priority}`);
+  if (labels !== undefined) changes.push('updated labels');
+  if (dueDate !== undefined && (dueDate || '') !== (previousTaskState.dueDate ? previousTaskState.dueDate.toISOString().split('T')[0] : '')) {
+    changes.push(dueDate ? `set due date to ${dueDate}` : 'cleared due date');
+  }
+
+  if (changes.length > 0) {
+    await logActivity({
+      board: task.board,
+      task: task._id,
+      user: req.user._id,
+      action: 'update_task',
+      details: changes.join(', '),
+    });
+  }
 
   const io = req.app.get('io');
   if (io) {
@@ -137,6 +206,17 @@ const moveTask = asyncHandler(async (req, res) => {
   // Return the moved task populated
   const populatedTask = await Task.findById(task._id).populate('assignee', 'name email avatarColor');
 
+  // Log Activity
+  const sourceCol = await Column.findById(oldColumn);
+  const destCol = await Column.findById(targetColumn);
+  await logActivity({
+    board: task.board,
+    task: task._id,
+    user: req.user._id,
+    action: 'move_task',
+    details: `moved this task from ${sourceCol ? sourceCol.title : 'Column'} to ${destCol ? destCol.title : 'Column'}`,
+  });
+
   const io = req.app.get('io');
   if (io) {
     io.to(`board_${task.board}`).emit('task_moved', {
@@ -160,6 +240,15 @@ const deleteTask = asyncHandler(async (req, res) => {
   }
 
   const columnId = task.column;
+
+  // Log Activity
+  await logActivity({
+    board: task.board,
+    task: task._id,
+    user: req.user._id,
+    action: 'delete_task',
+    details: `deleted task "${task.title}"`,
+  });
 
   // Delete the task document
   await Task.findByIdAndDelete(req.params.id);
@@ -209,12 +298,13 @@ const uploadAttachment = asyncHandler(async (req, res) => {
     .populate('assignee', 'name email avatarColor')
     .populate('attachments.uploadedBy', 'name email avatarColor');
 
-  // Create activity audit log entry
-  await Activity.create({
+  // Log Activity
+  await logActivity({
+    board: task.board,
     task: task._id,
     user: req.user._id,
-    action: 'added_attachment',
-    details: `Uploaded attachment: ${req.file.originalname}`,
+    action: 'upload_attachment',
+    details: `added an attachment: ${req.file.originalname}`,
   });
 
   // Broadcast socket event

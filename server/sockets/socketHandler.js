@@ -3,6 +3,7 @@ const User = require('../models/User');
 
 const presence = {}; // { boardId: [{ userId, name, socketId }] }
 const socketToBoard = {}; // { socketId: boardId }
+const userSocketMap = {}; // { userId: [socketId] }
 
 function initSocket(io) {
   // Handshake authentication middleware
@@ -59,6 +60,20 @@ function initSocket(io) {
       }
     });
 
+    // Identify user for direct notification routing
+    socket.on('identify', (userId) => {
+      if (userId) {
+        socket.userId = userId;
+        if (!userSocketMap[userId]) {
+          userSocketMap[userId] = [];
+        }
+        if (!userSocketMap[userId].includes(socket.id)) {
+          userSocketMap[userId].push(socket.id);
+        }
+        console.log(`Socket identified user ${userId} for socket ${socket.id}`);
+      }
+    });
+
     // Leave a Board room
     socket.on('leave_board', (payload) => {
       const boardId = typeof payload === 'object' ? payload.boardId : payload;
@@ -74,6 +89,14 @@ function initSocket(io) {
       if (boardId) {
         removeUserFromPresence(io, boardId, socket.id);
         delete socketToBoard[socket.id];
+      }
+      
+      // Clean up in-memory socket maps
+      if (socket.userId && userSocketMap[socket.userId]) {
+        userSocketMap[socket.userId] = userSocketMap[socket.userId].filter((id) => id !== socket.id);
+        if (userSocketMap[socket.userId].length === 0) {
+          delete userSocketMap[socket.userId];
+        }
       }
       console.log('Client disconnected:', socket.id);
     });
@@ -95,4 +118,15 @@ function removeUserFromPresence(io, boardId, socketId) {
   }
 }
 
+function emitToUser(io, userId, event, data) {
+  if (!io || !userId) return;
+  const socketIds = userSocketMap[userId.toString()];
+  if (socketIds && socketIds.length > 0) {
+    socketIds.forEach((socketId) => {
+      io.to(socketId).emit(event, data);
+    });
+  }
+}
+
+initSocket.emitToUser = emitToUser;
 module.exports = initSocket;
