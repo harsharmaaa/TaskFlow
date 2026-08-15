@@ -1,0 +1,320 @@
+import React, { useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+} from '@dnd-kit/core';
+import {
+  fetchBoardById,
+  clearCurrentBoard,
+  moveTaskOptimistically,
+} from '../store/boardSlice';
+import { relocateTask } from '../store/taskSlice';
+import { getUserRole, canManageBoard } from '../utils/permissions';
+import boardService from '../services/boardService';
+import useSocket from '../hooks/useSocket';
+import Navbar from '../components/Navbar';
+import Column from '../components/Column';
+import toast from 'react-hot-toast';
+
+function BoardView() {
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const { currentBoard, isLoading, error, presence } = useSelector((state) => state.board);
+
+  // Invoke our custom Socket.io integration hook
+  useSocket(id);
+
+  // Set up pointer and touch sensors with activation constraints
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8, // Require 8px drag to distinguish clicks from drags
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 200, // Require 200ms hold for mobile drag start to allow scrolling
+      tolerance: 5,
+    },
+  });
+
+  const sensors = useSensors(pointerSensor, touchSensor);
+
+  useEffect(() => {
+    dispatch(fetchBoardById(id));
+
+    return () => {
+      dispatch(clearCurrentBoard());
+    };
+  }, [id, dispatch]);
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
+  };
+
+  const getMemberColor = (activeUser) => {
+    const memberObj = currentBoard?.members?.find(
+      (m) => m.user && m.user._id === activeUser.userId
+    );
+    return memberObj?.user?.avatarColor || (currentBoard?.owner?._id === activeUser.userId ? currentBoard.owner.avatarColor : '#6366F1');
+  };
+
+  // Determine if user has Admin privileges
+  const userRole = getUserRole(currentBoard, user?._id);
+  const isAdmin = canManageBoard(userRole);
+  const canMoveTasks = userRole === 'Admin' || userRole === 'Manager' || userRole === 'Member';
+
+  const handleDeleteBoard = async () => {
+    if (window.confirm('Are you sure you want to permanently delete this board? This action will purge all columns and tasks!')) {
+      try {
+        await boardService.deleteBoard(id);
+        toast.success('Board deleted successfully');
+        navigate('/dashboard');
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Failed to delete board');
+      }
+    }
+  };
+
+  // Helper to find column ID of active or over draggable elements
+  const findColumnId = (itemId) => {
+    if (!currentBoard || !currentBoard.columns) return null;
+
+    // Check if the drop target ID is a Column ID itself
+    if (currentBoard.columns.some((c) => c._id === itemId)) {
+      return itemId;
+    }
+
+    // Otherwise look up which column contains the Task ID
+    const foundCol = currentBoard.columns.find((c) =>
+      c.tasks.some((t) => t._id === itemId)
+    );
+    return foundCol ? foundCol._id : null;
+  };
+
+  // Callback triggered when drag finishes
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+
+    if (!over) return;
+    if (active.id === over.id) return;
+
+    if (!canMoveTasks) {
+      return toast.error('Access forbidden: Only board members can move tasks');
+    }
+
+    const taskId = active.id;
+    const sourceColId = findColumnId(active.id);
+    const destColId = findColumnId(over.id);
+
+    if (!sourceColId || !destColId) return;
+
+    // Retrieve target index inside the destination column
+    const destCol = currentBoard.columns.find((c) => c._id === destColId);
+    if (!destCol) return;
+
+    let targetIndex;
+    if (over.id === destColId) {
+      // Dropped onto empty column background, put at end
+      targetIndex = destCol.tasks.length;
+    } else {
+      // Dropped onto another task card, place at its index
+      const overIndex = destCol.tasks.findIndex((t) => t._id === over.id);
+      targetIndex = overIndex === -1 ? destCol.tasks.length : overIndex;
+    }
+
+    // 1. Optimistically update local board Redux state to keep UI instant
+    dispatch(
+      moveTaskOptimistically({
+        taskId,
+        sourceColId,
+        destColId,
+        targetIndex,
+      })
+    );
+
+    // 2. Call backend in background
+    const result = await dispatch(
+      relocateTask({
+        id: taskId,
+        moveData: { column: destColId, order: targetIndex },
+      })
+    );
+
+    // 3. Revert changes on backend error
+    if (relocateTask.rejected.match(result)) {
+      toast.error('Failed to move task. Reverting position.');
+      dispatch(fetchBoardById(currentBoard._id));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-500/10 rounded-full filter blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full filter blur-[100px] pointer-events-none" />
+
+      {/* Navigation Header */}
+      <Navbar />
+
+      {/* Main Container */}
+      <main className="z-10 flex-1 p-6 sm:p-8 w-full flex flex-col overflow-hidden">
+        
+        {/* Board Top Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          
+          {/* Back button + Board Title */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/dashboard"
+              className="p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95 flex-shrink-0"
+              title="Back to Workspaces"
+            >
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            
+            {isLoading && !currentBoard ? (
+              <div className="h-8 w-48 rounded bg-slate-800 animate-pulse" />
+            ) : error ? (
+              <h1 className="text-2xl font-bold text-rose-500">Board Error</h1>
+            ) : (
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white select-none">
+                  {currentBoard?.title}
+                </h1>
+                {currentBoard && (
+                  <p className="text-[10px] text-slate-500 mt-1 select-none">
+                    Owner: <span className="text-slate-400 font-semibold">{currentBoard.owner?.name}</span>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Member avatars list + Manage team */}
+          {currentBoard && !isLoading && (
+            <div className="flex flex-wrap items-center gap-4 md:gap-6">
+              
+              {/* Online Presence Stack */}
+              {presence && presence.length > 0 && (
+                <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-3 py-1.5 shadow-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider mr-1 select-none">Online:</span>
+                  <div className="flex -space-x-1.5 select-none">
+                    {presence.map((activeUser, idx) => (
+                      <div
+                        key={activeUser.socketId || idx}
+                        className="w-6.5 h-6.5 rounded-full border border-slate-950 flex items-center justify-center font-bold text-white text-[8px] transform hover:-translate-y-1 transition-transform cursor-help shadow-sm"
+                        style={{ backgroundColor: getMemberColor(activeUser) }}
+                        title={`${activeUser.name} is active`}
+                      >
+                        {getInitials(activeUser.name)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Member Stack */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-slate-500 mr-1 select-none">Collaborators:</span>
+                <div className="flex -space-x-1.5 select-none">
+                  {currentBoard.members?.map((member, idx) => {
+                    const memberUser = member.user || {};
+                    return (
+                      <div
+                        key={memberUser._id || idx}
+                        className="w-7.5 h-7.5 rounded-full border-2 border-slate-950 flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help"
+                        style={{ backgroundColor: memberUser.avatarColor || '#6366F1' }}
+                        title={`${memberUser.name} (${member.role})`}
+                      >
+                        {getInitials(memberUser.name)}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Manage team configuration buttons */}
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/boards/${id}/team`}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 border border-white/5 hover:border-brand-500/20 text-slate-300 hover:text-white text-xs font-semibold hover:bg-slate-900/50 active:scale-95 transition-all duration-200"
+                  >
+                    Manage Team
+                  </Link>
+                  <button
+                    onClick={handleDeleteBoard}
+                    className="px-3.5 py-2 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 hover:border-rose-500/30 text-xs font-semibold active:scale-95 transition-all duration-200"
+                  >
+                    Delete Board
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Board Columns Scroll Area */}
+        <div className="flex-1 overflow-x-auto pb-4 scrollbar-thin flex items-start gap-6 select-none min-h-[300px]">
+          {isLoading && !currentBoard ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 bg-white/[0.01] border border-white/5 rounded-3xl min-h-[400px]">
+              <svg className="animate-spin h-8 w-8 text-brand-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <p className="text-sm text-slate-400">Loading board canvas...</p>
+            </div>
+          ) : error ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl border border-white/5 bg-white/[0.01] text-center py-20 min-h-[400px]">
+              <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 text-xl mb-4">⚠️</div>
+              <h3 className="text-lg font-bold text-white mb-1">Failed to fetch board</h3>
+              <p className="text-xs text-slate-400 max-w-xs mb-4">{error}</p>
+              <Link to="/dashboard" className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-white/10 hover:border-white/20 text-slate-200">
+                Back to workspaces
+              </Link>
+            </div>
+          ) : currentBoard ? (
+            /* Wrap columns grid with DndContext */
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex flex-row items-start gap-6 h-full w-full">
+                {currentBoard.columns?.map((col) => (
+                  <Column
+                    key={col._id}
+                    column={col}
+                    tasks={col.tasks || []}
+                  />
+                ))}
+              </div>
+            </DndContext>
+          ) : null}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default BoardView;
