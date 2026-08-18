@@ -1,32 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { format } from 'date-fns';
 import { editTask, removeTask } from '../store/taskSlice';
 import { getUserRole, canEditTasks } from '../utils/permissions';
-import { format } from 'date-fns';
-import toast from 'react-hot-toast';
 import AttachmentUpload from './AttachmentUpload';
 import CommentSection from './CommentSection';
 import ActivityLog from './ActivityLog';
+import toast from 'react-hot-toast';
 
 function TaskDetailModal({ task, isOpen, onClose }) {
   const dispatch = useDispatch();
+  const isInitialMount = useRef(true);
+
   const { user } = useSelector((state) => state.auth);
   const { currentBoard } = useSelector((state) => state.board);
 
-  // local states for editing
+  // Local state for auto-save fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
   const [priority, setPriority] = useState('Medium');
-  const [labels, setLabels] = useState([]);
   const [dueDate, setDueDate] = useState('');
-  
-  // local helper states
+  const [labels, setLabels] = useState([]);
   const [newLabelInput, setNewLabelInput] = useState('');
-  const [saveStatus, setSaveStatus] = useState('Saved'); // 'Saved' | 'Saving...' | 'Error'
-
-  // Ref to track if modal is mounting or loading a different task to prevent initial save trigger
-  const isInitialMount = useRef(true);
+  const [saveStatus, setSaveStatus] = useState('Saved'); // 'Saved', 'Saving...', 'Error'
 
   // Sync state when task changes or modal opens
   useEffect(() => {
@@ -159,15 +156,15 @@ function TaskDetailModal({ task, isOpen, onClose }) {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-appBg/85 backdrop-blur-md animate-fade-in"
     >
       {/* Modal Container */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl h-full sm:h-[85vh] bg-slate-900 sm:border border-white/10 sm:rounded-2xl shadow-premium flex flex-col overflow-hidden animate-scale-up"
+        className="w-full max-w-3xl h-full sm:h-[85vh] bg-cardBg sm:border border-borderSep sm:rounded-card flex flex-col overflow-hidden animate-scale-up"
       >
         {/* Header Block */}
-        <div className="p-6 border-b border-white/5 flex items-start justify-between gap-4">
+        <div className="p-6 border-b border-borderSep flex items-start justify-between gap-4">
           <div className="flex-1 flex flex-col gap-1.5">
             {/* Auto-save Status Indicator */}
             <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider select-none">
@@ -197,15 +194,15 @@ function TaskDetailModal({ task, isOpen, onClose }) {
               onBlur={handleTitleBlur}
               disabled={!canInteract}
               placeholder="Enter task title..."
-              className="text-lg sm:text-xl font-extrabold text-white bg-transparent border-b border-transparent hover:border-white/10 focus:border-brand-500 focus:outline-none w-full py-0.5 transition-all select-all disabled:cursor-not-allowed"
+              className="text-lg sm:text-xl font-semibold text-textPrimary bg-transparent border-b border-transparent hover:border-borderSep focus:border-accent focus:outline-none w-full py-0.5 transition-all select-all disabled:cursor-not-allowed tracking-tight"
             />
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all flex-shrink-0"
+            className="p-1.5 rounded-btn text-textMuted hover:text-textPrimary hover:bg-[#232330]/50 transition-all flex-shrink-0"
           >
-            <svg className="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -214,12 +211,12 @@ function TaskDetailModal({ task, isOpen, onClose }) {
         {/* Content Body Grid */}
         <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6 scrollbar-thin">
           
-          {/* Left / Middle: Task fields and Day 13-16 placeholders */}
+          {/* Left / Middle: Task fields and placeholders */}
           <div className="md:col-span-2 space-y-6">
             
             {/* Description Textarea */}
             <div className="space-y-2">
-              <label htmlFor="description" className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              <label htmlFor="description" className="text-xs font-semibold text-textMuted uppercase tracking-wider block">
                 Description
               </label>
               <textarea
@@ -229,16 +226,15 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                 onBlur={handleDescriptionBlur}
                 disabled={!canInteract}
                 placeholder="Add a more detailed description for this task..."
-                className="w-full h-32 px-4 py-3 rounded-xl bg-slate-950 border border-white/5 focus:border-brand-500 focus:outline-none text-slate-200 text-sm placeholder-slate-600 resize-none transition-all disabled:cursor-not-allowed"
+                className="w-full h-32 px-4 py-3 rounded-input bg-appBg border border-borderSep focus:border-accent focus:outline-none text-textPrimary text-sm placeholder-textMuted/40 resize-none transition-all disabled:cursor-not-allowed"
               />
             </div>
 
-            {/* Day 13-16 Placeholder Sections */}
-            <hr className="border-white/5" />
+            <hr className="border-borderSep" />
 
             {/* Attachments Section */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 select-none">
+              <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider flex items-center gap-1.5 select-none">
                 📎 File Attachments
               </h3>
               <AttachmentUpload taskId={task._id} attachments={task.attachments || []} />
@@ -246,7 +242,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
 
             {/* Comments Section */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 select-none">
+              <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider flex items-center gap-1.5 select-none">
                 💬 Comments & Mentions
               </h3>
               <CommentSection taskId={task._id} />
@@ -254,7 +250,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
 
             {/* Audit Logs Section */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 select-none">
+              <h3 className="text-xs font-semibold text-textMuted uppercase tracking-wider flex items-center gap-1.5 select-none">
                 📜 Activity Audit Log
               </h3>
               <ActivityLog taskId={task._id} />
@@ -263,11 +259,11 @@ function TaskDetailModal({ task, isOpen, onClose }) {
           </div>
 
           {/* Right Column: Sidebar metadata controls */}
-          <div className="space-y-5 bg-slate-950/20 p-4 rounded-2xl border border-white/5 h-fit">
+          <div className="space-y-5 bg-appBg/50 p-4 rounded-card border border-borderSep h-fit">
             
             {/* Assignee Config */}
             <div className="space-y-2">
-              <label htmlFor="assignee" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <label htmlFor="assignee" className="text-[10px] font-semibold text-textMuted uppercase tracking-wider block">
                 Assignee
               </label>
               <select
@@ -275,7 +271,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                 value={assigneeId}
                 onChange={handleAssigneeChange}
                 disabled={!canInteract}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-xs focus:border-brand-500 focus:outline-none transition-all disabled:cursor-not-allowed"
+                className="w-full px-3.5 py-2.5 rounded-input bg-cardBg border border-borderSep text-textPrimary text-xs focus:border-accent focus:outline-none transition-all disabled:cursor-not-allowed"
               >
                 <option value="">Unassigned</option>
                 {membersList.map((member) => {
@@ -291,7 +287,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
 
             {/* Priority Selector */}
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <label className="text-[10px] font-semibold text-textMuted uppercase tracking-wider block">
                 Priority
               </label>
               <div className="flex gap-2">
@@ -299,11 +295,11 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                   const isActive = priority === p;
                   let colorClass = '';
                   if (isActive) {
-                    if (p === 'High') colorClass = 'bg-rose-500 text-white shadow-md shadow-rose-500/20';
-                    else if (p === 'Medium') colorClass = 'bg-amber-500 text-white shadow-md shadow-amber-500/20';
-                    else colorClass = 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20';
+                    if (p === 'High') colorClass = 'bg-priorityHigh text-appBg font-bold';
+                    else if (p === 'Medium') colorClass = 'bg-priorityMedium text-appBg font-bold';
+                    else colorClass = 'bg-priorityLow text-appBg font-bold';
                   } else {
-                    colorClass = 'bg-slate-900 border border-white/15 text-slate-400 hover:text-white hover:border-white/30';
+                    colorClass = 'bg-cardBg border border-borderSep text-textMuted hover:text-textPrimary hover:border-textMuted/30';
                   }
                   
                   return (
@@ -312,7 +308,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                       type="button"
                       onClick={() => handlePrioritySelect(p)}
                       disabled={!canInteract}
-                      className={`flex-1 py-2 px-1 rounded-xl text-[10px] font-bold transition-all ${colorClass} disabled:cursor-not-allowed`}
+                      className={`flex-1 py-2 px-1 rounded-btn text-[10px] font-bold transition-all ${colorClass} disabled:cursor-not-allowed`}
                     >
                       {p}
                     </button>
@@ -323,7 +319,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
 
             {/* Due Date Config */}
             <div className="space-y-2">
-              <label htmlFor="dueDate" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <label htmlFor="dueDate" className="text-[10px] font-semibold text-textMuted uppercase tracking-wider block">
                 Due Date
               </label>
               <input
@@ -332,13 +328,13 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                 value={dueDate}
                 onChange={handleDueDateChange}
                 disabled={!canInteract}
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-xs focus:border-brand-500 focus:outline-none transition-all disabled:cursor-not-allowed [color-scheme:dark]"
+                className="w-full px-3.5 py-2 rounded-input bg-cardBg border border-borderSep text-textPrimary text-xs focus:border-accent focus:outline-none transition-all disabled:cursor-not-allowed [color-scheme:dark]"
               />
             </div>
 
             {/* Labels Manager */}
             <div className="space-y-2.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <label className="text-[10px] font-semibold text-textMuted uppercase tracking-wider block">
                 Labels
               </label>
               
@@ -347,14 +343,14 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                 {labels.map((label, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/15 uppercase tracking-wide"
+                    className="inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/15 uppercase tracking-wide"
                   >
                     {label}
                     {canInteract && (
                       <button
                         type="button"
                         onClick={() => handleRemoveLabel(label)}
-                        className="text-slate-400 hover:text-white font-bold"
+                        className="text-textMuted hover:text-textPrimary font-bold"
                       >
                         ×
                       </button>
@@ -362,7 +358,7 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                   </span>
                 ))}
                 {labels.length === 0 && (
-                  <span className="text-[10px] text-slate-500 select-none italic">No labels</span>
+                  <span className="text-[10px] text-textMuted/40 select-none italic">No labels</span>
                 )}
               </div>
 
@@ -374,11 +370,11 @@ function TaskDetailModal({ task, isOpen, onClose }) {
                     value={newLabelInput}
                     onChange={(e) => setNewLabelInput(e.target.value)}
                     placeholder="New label..."
-                    className="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-[10px] focus:border-brand-500 focus:outline-none transition-all"
+                    className="flex-1 px-3 py-1.5 rounded-input bg-cardBg border border-borderSep text-textPrimary text-[10px] focus:border-accent focus:outline-none transition-all"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[10px] transition-all active:scale-95"
+                    className="px-3 py-1.5 rounded-btn bg-accent hover:bg-accent/90 text-white font-semibold text-[10px] transition-all active:scale-95"
                   >
                     +
                   </button>
@@ -388,11 +384,11 @@ function TaskDetailModal({ task, isOpen, onClose }) {
 
             {/* Danger Zone: Delete task (Manager+) */}
             {canManageTask && (
-              <div className="pt-4 border-t border-white/5 mt-4">
+              <div className="pt-4 border-t border-borderSep mt-4">
                 <button
                   type="button"
                   onClick={handleDeleteTask}
-                  className="w-full py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/15 hover:border-rose-500/30 text-rose-400 text-xs font-semibold active:scale-[0.98] transition-all duration-200"
+                  className="w-full py-2.5 rounded-btn border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/15 hover:border-rose-500/30 text-rose-400 text-xs font-semibold active:scale-[0.98] transition-all duration-200"
                 >
                   Delete Task
                 </button>

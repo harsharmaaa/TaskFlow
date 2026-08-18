@@ -8,6 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        appBg: '#0B0B0F',
+        cardBg: '#15151C',
+        borderSep: '#232330',
+        textPrimary: '#F4F4F6',
+        textMuted: '#8A8A97',
+        accent: '#6366F1',
+        // Priority strip colors
+        priorityLow: '#34D399',
+        priorityMedium: '#FBBF24',
+        priorityHigh: '#F87171',
         brand: {
           50: '#f5f3ff',
           100: '#ede9fe',
@@ -21,20 +31,18 @@ export default {
           900: '#4c1d95',
           950: '#1e1b4b',
         },
-        slate: {
-          950: '#0b0f19', // Premium deep dark color
-        }
+      },
+      borderRadius: {
+        card: '8px',
+        input: '8px',
+        btn: '6px',
       },
       fontFamily: {
-        sans: ['Outfit', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-        'glass-hover': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-        'premium': '0 10px 30px -10px rgba(0, 0, 0, 0.3)',
-      },
-      backdropBlur: {
-        xs: '2px',
+        'hover-subtle': '0 4px 12px 0 rgba(0, 0, 0, 0.4)',
+        'drag-active': '0 10px 25px -5px rgba(0, 0, 0, 0.6)',
       }
     },
   },

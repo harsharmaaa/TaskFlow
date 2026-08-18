@@ -4,37 +4,39 @@
 
 @layer base {
   body {
-    @apply antialiased text-slate-800 bg-slate-50 dark:text-slate-100 dark:bg-slate-950 transition-colors duration-300;
+    @apply antialiased text-textPrimary bg-appBg font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-semibold tracking-[-0.02em];
   }
 }
 
-/* Custom premium scrollbars */
+/* Custom premium scrollbars matching dark theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0B0B0F;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-800 rounded-full transition-colors hover:bg-slate-400 dark:hover:bg-slate-700;
+  background: #232330;
+  border-radius: 9999px;
+  transition: background-color 150ms ease;
 }
 
-/* Glassmorphism helper utilities */
+::-webkit-scrollbar-thumb:hover {
+  background: #8A8A97;
+}
+
+/* Glassmorphism helper utilities updated for design system */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(21, 21, 28, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.dark .glass-effect {
-  background: rgba(11, 15, 25, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid #232330;
 }
 
 /* Shimmer animation for loading states */
@@ -49,19 +51,9 @@
 
 .animate-shimmer {
   background: linear-gradient(90deg, 
-    rgba(226, 232, 240, 0.2) 25%, 
-    rgba(203, 213, 225, 0.4) 50%, 
-    rgba(226, 232, 240, 0.2) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-
-.dark .animate-shimmer {
-  background: linear-gradient(90deg, 
-    rgba(30, 41, 59, 0.2) 25%, 
-    rgba(51, 65, 85, 0.4) 50%, 
-    rgba(30, 41, 59, 0.2) 75%
+    rgba(35, 35, 48, 0.3) 25%, 
+    rgba(138, 138, 151, 0.15) 50%, 
+    rgba(35, 35, 48, 0.3) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;

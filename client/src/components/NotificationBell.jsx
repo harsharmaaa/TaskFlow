@@ -43,13 +43,11 @@ function NotificationBell() {
   };
 
   const handleNotificationClick = (notification) => {
-    // Mark as read
     if (!notification.isRead) {
       dispatch(markRead(notification._id));
     }
     setIsOpen(false);
 
-    // Redirect to task's board
     const boardId = notification.task?.board || notification.task;
     if (boardId) {
       navigate(`/boards/${boardId}`);
@@ -60,14 +58,14 @@ function NotificationBell() {
     switch (type) {
       case 'mentioned':
         return (
-          <div className="w-7 h-7 rounded-full bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-xs flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-[10px] flex-shrink-0">
             💬
           </div>
         );
       case 'assigned':
       default:
         return (
-          <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-xs flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#34D399]/10 border border-[#34D399]/20 flex items-center justify-center text-[10px] flex-shrink-0">
             👤
           </div>
         );
@@ -80,11 +78,11 @@ function NotificationBell() {
       <button
         onClick={handleToggle}
         type="button"
-        className="relative p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/5 text-slate-400 hover:text-white transition-all duration-200 active:scale-95 flex items-center justify-center"
+        className="relative p-2 rounded-btn bg-transparent border border-borderSep hover:border-textMuted/30 hover:bg-[#232330]/30 text-textMuted hover:text-textPrimary transition-all duration-200 active:scale-95 flex items-center justify-center"
         aria-label="Toggle notifications dropdown"
       >
         <svg
-          className={`w-5 h-5 ${unreadCount > 0 ? 'animate-wiggle text-brand-400' : ''}`}
+          className={`w-5 h-5 ${unreadCount > 0 ? 'animate-wiggle text-accent' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -99,26 +97,26 @@ function NotificationBell() {
 
         {/* Count Badge indicator */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white border-2 border-slate-950 flex items-center justify-center text-[9px] font-black leading-none animate-pulse">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[8px] font-black leading-none animate-pulse">
+            {unreadCount > 99 ? '99' : unreadCount}
           </span>
         )}
       </button>
 
       {/* Dropdown Panel Grid */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-white/10 shadow-premium p-1.5 z-50 flex flex-col overflow-hidden animate-scale-up max-h-[420px]">
+        <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-card bg-cardBg border border-borderSep shadow-hover-subtle p-1.5 z-50 flex flex-col overflow-hidden animate-scale-up max-h-[420px]">
           
           {/* Header */}
-          <div className="px-4.5 py-3 border-b border-white/5 flex items-center justify-between">
-            <span className="text-xs font-bold text-white uppercase tracking-wider select-none">
+          <div className="px-4 py-3 border-b border-borderSep flex items-center justify-between">
+            <span className="text-xs font-bold text-textPrimary uppercase tracking-wider select-none">
               Notifications
             </span>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
                 type="button"
-                className="text-[10px] font-bold text-brand-400 hover:text-brand-300 transition-all hover:underline"
+                className="text-[10px] font-bold text-accent hover:text-accent/80 transition-all hover:underline"
               >
                 Mark all as read
               </button>
@@ -126,9 +124,9 @@ function NotificationBell() {
           </div>
 
           {/* List scroll block */}
-          <div className="flex-1 overflow-y-auto divide-y divide-white/5 scrollbar-thin max-h-72">
+          <div className="flex-1 overflow-y-auto divide-y divide-borderSep scrollbar-thin max-h-72">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-500 select-none">
+              <div className="p-8 text-center text-xs text-textMuted select-none italic">
                 All caught up! 🎉
               </div>
             ) : (
@@ -141,18 +139,18 @@ function NotificationBell() {
                   <div
                     key={notification._id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`p-3.5 flex gap-3.5 items-start cursor-pointer hover:bg-white/[0.02] transition-all border-l-2 ${
+                    className={`p-3 flex gap-3 items-start cursor-pointer hover:bg-appBg transition-all border-l-2 ${
                       notification.isRead
-                        ? 'border-transparent opacity-65'
-                        : 'border-brand-500 bg-brand-500/[0.01]'
+                        ? 'border-transparent opacity-60 text-textMuted'
+                        : 'border-accent bg-accent/[0.02] text-textPrimary'
                     }`}
                   >
                     {getNotificationIcon(notification.type)}
                     <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-xs text-slate-200 leading-snug break-words">
+                      <p className="text-xs leading-snug break-words">
                         {notification.message}
                       </p>
-                      <span className="text-[9px] text-slate-500 block select-none">
+                      <span className="text-[9px] text-textMuted/60 block select-none">
                         {timeString}
                       </span>
                     </div>

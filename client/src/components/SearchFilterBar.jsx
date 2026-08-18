@@ -28,7 +28,7 @@ function SearchFilterBar({
     selectedLabels.length > 0;
 
   return (
-    <div className="w-full bg-slate-900/40 border border-white/5 rounded-2xl p-4 mb-6 flex flex-col gap-4 select-none backdrop-blur-md">
+    <div className="w-full bg-cardBg border border-borderSep rounded-card p-4 mb-6 flex flex-col gap-4 select-none">
       {/* Top Row: Search Input & Dropdown Filters */}
       <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
         
@@ -39,10 +39,10 @@ function SearchFilterBar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search tasks by title..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-950 border border-white/10 focus:border-brand-500 focus:outline-none text-slate-200 text-xs placeholder-slate-600 transition-all duration-200"
+            className="w-full pl-10 pr-4 py-2 rounded-input bg-appBg border border-borderSep focus:border-accent focus:outline-none text-textPrimary text-xs placeholder-textMuted/40 transition-all duration-200"
           />
           <svg
-            className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-600"
+            className="absolute left-3.5 top-2.5 w-4 h-4 text-textMuted/40"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -57,11 +57,11 @@ function SearchFilterBar({
           
           {/* Assignee Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Assignee:</span>
+            <span className="text-[10px] font-semibold text-textMuted uppercase tracking-wider">Assignee:</span>
             <select
               value={assigneeFilter}
               onChange={(e) => setAssigneeFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-950 border border-white/10 hover:border-white/20 text-slate-300 focus:outline-none text-xs transition-all cursor-pointer font-medium"
+              className="px-3 py-2 rounded-input bg-appBg border border-borderSep hover:border-textMuted/30 text-textPrimary focus:outline-none text-xs transition-all cursor-pointer font-semibold"
             >
               <option value="all">Everyone</option>
               <option value="unassigned">Unassigned</option>
@@ -78,11 +78,11 @@ function SearchFilterBar({
 
           {/* Priority Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Priority:</span>
+            <span className="text-[10px] font-semibold text-textMuted uppercase tracking-wider">Priority:</span>
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-950 border border-white/10 hover:border-white/20 text-slate-300 focus:outline-none text-xs transition-all cursor-pointer font-medium"
+              className="px-3 py-2 rounded-input bg-appBg border border-borderSep hover:border-textMuted/30 text-textPrimary focus:outline-none text-xs transition-all cursor-pointer font-semibold"
             >
               <option value="all">All Priorities</option>
               <option value="Low">Low</option>
@@ -96,7 +96,7 @@ function SearchFilterBar({
             <button
               onClick={onClear}
               type="button"
-              className="px-3.5 py-2 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 hover:border-rose-500/30 text-xs font-bold active:scale-95 transition-all duration-200"
+              className="px-3.5 py-2 rounded-btn border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/15 hover:border-rose-500/30 text-rose-400 text-xs font-semibold active:scale-95 transition-all duration-200"
             >
               Clear Filters
             </button>
@@ -107,8 +107,8 @@ function SearchFilterBar({
 
       {/* Bottom Row: Label Pills filter */}
       {allLabels.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-4">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mr-1.5 select-none">
+        <div className="flex flex-wrap items-center gap-2 border-t border-borderSep pt-4">
+          <span className="text-[10px] font-semibold text-textMuted uppercase tracking-wider mr-1.5 select-none">
             Filter by Labels:
           </span>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -121,8 +121,8 @@ function SearchFilterBar({
                   onClick={() => toggleLabel(label)}
                   className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-all duration-150 border cursor-pointer ${
                     isSelected
-                      ? 'bg-brand-600 border-brand-500 text-white font-bold shadow-md shadow-brand-500/15'
-                      : 'bg-white/[0.01] border-white/10 hover:border-white/20 text-slate-400 hover:text-slate-200'
+                      ? 'bg-accent border-accent text-white font-semibold'
+                      : 'bg-appBg border-borderSep hover:border-textMuted/30 text-textMuted hover:text-textPrimary'
                   }`}
                 >
                   {label}

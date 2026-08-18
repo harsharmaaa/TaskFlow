@@ -17,7 +17,6 @@ function BoardCard({ board }) {
     navigate(`/boards/${board._id}`);
   };
 
-  // Limit avatar stack to first 4 members
   const maxAvatars = 4;
   const membersList = board.members || [];
   const displayMembers = membersList.slice(0, maxAvatars);
@@ -26,26 +25,26 @@ function BoardCard({ board }) {
   return (
     <div
       onClick={handleClick}
-      className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer shadow-glass hover:shadow-glass-hover hover:-translate-y-0.5 group flex flex-col justify-between min-h-[160px]"
+      className="p-6 rounded-card bg-cardBg border border-borderSep hover:border-accent hover:bg-cardBg/90 transition-all duration-150 cursor-pointer hover:shadow-hover-subtle flex flex-col justify-between min-h-[160px] group"
     >
       {/* Title */}
       <div>
         <div className="flex items-start justify-between mb-2">
-          <h3 className="text-lg font-bold text-white group-hover:text-brand-400 transition-colors truncate pr-4">
+          <h3 className="text-lg font-semibold text-textPrimary group-hover:text-accent transition-colors truncate pr-4 tracking-tight">
             {board.title}
           </h3>
-          <span className="text-[10px] bg-slate-900 border border-white/5 text-slate-400 font-semibold px-2 py-0.5 rounded-full select-none capitalize">
+          <span className="text-[10px] bg-appBg border border-borderSep text-textMuted font-semibold px-2 py-0.5 rounded-full select-none capitalize">
             {board.owner?.name === board.members?.[0]?.user?.name ? 'Personal' : 'Team'}
           </span>
         </div>
-        <p className="text-xs text-slate-400 line-clamp-1 mb-4 select-none">
+        <p className="text-xs text-textMuted line-clamp-1 mb-4 select-none">
           Created by {board.owner?.name || 'Unknown'}
         </p>
       </div>
 
       {/* Footer Info */}
-      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-        <span className="text-xs font-medium text-slate-400 select-none">
+      <div className="flex items-center justify-between pt-4 border-t border-borderSep">
+        <span className="text-xs font-semibold text-textMuted select-none">
           {membersList.length} {membersList.length === 1 ? 'member' : 'members'}
         </span>
 
@@ -56,7 +55,7 @@ function BoardCard({ board }) {
             return (
               <div
                 key={userObj._id || idx}
-                className="w-7 h-7 rounded-full border-2 border-slate-950 flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help"
+                className="w-7 h-7 rounded-full border-2 border-cardBg flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help"
                 style={{ backgroundColor: userObj.avatarColor || '#6366F1' }}
                 title={userObj.name || 'Collaborator'}
               >
@@ -66,7 +65,7 @@ function BoardCard({ board }) {
           })}
           {excessCount > 0 && (
             <div
-              className="w-7 h-7 rounded-full border-2 border-slate-950 bg-slate-900 flex items-center justify-center font-bold text-slate-300 text-[9px]"
+              className="w-7 h-7 rounded-full border-2 border-cardBg bg-appBg flex items-center justify-center font-bold text-textMuted text-[9px]"
               title={`${excessCount} more members`}
             >
               +{excessCount}

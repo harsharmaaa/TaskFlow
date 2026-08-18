@@ -11,16 +11,16 @@ function RoleBadge({ role }) {
         };
       case 'Manager':
         return {
-          bg: 'bg-blue-500/10',
-          text: 'text-blue-400',
-          border: 'border-blue-500/20',
+          bg: 'bg-accent/10',
+          text: 'text-accent',
+          border: 'border-accent/20',
         };
       case 'Member':
       default:
         return {
-          bg: 'bg-slate-500/10',
-          text: 'text-slate-400',
-          border: 'border-white/5',
+          bg: 'bg-textMuted/10',
+          text: 'text-textMuted',
+          border: 'border-borderSep',
         };
     }
   };
@@ -29,7 +29,7 @@ function RoleBadge({ role }) {
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider select-none ${styles.bg} ${styles.text} ${styles.border}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider select-none ${styles.bg} ${styles.text} ${styles.border}`}
     >
       {role}
     </span>

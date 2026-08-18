@@ -153,7 +153,7 @@ function CommentSection({ taskId }) {
         return (
           <span
             key={index}
-            className="px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-400 font-bold border border-brand-500/15 text-[11px] select-all"
+            className="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-semibold border border-accent/15 text-[10px] select-all"
           >
             {part}
           </span>
@@ -178,14 +178,14 @@ function CommentSection({ taskId }) {
       <div className="flex-1 max-h-72 overflow-y-auto space-y-3.5 pr-2 scrollbar-thin">
         {isLoading ? (
           <div className="py-6 flex items-center justify-center gap-2">
-            <svg className="animate-spin h-4 w-4 text-brand-500" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <span className="text-xs text-slate-500 select-none">Loading comments...</span>
+            <span className="text-xs text-textMuted select-none">Loading comments...</span>
           </div>
         ) : comments.length === 0 ? (
-          <div className="p-5 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-center text-xs text-slate-500 select-none">
+          <div className="p-5 rounded-card border border-dashed border-borderSep bg-appBg/20 text-center text-xs text-textMuted select-none italic">
             No comments yet. Mention team members using <strong>@name</strong>!
           </div>
         ) : (
@@ -214,20 +214,20 @@ function CommentSection({ taskId }) {
                 <div className={`flex flex-col max-w-[80%] ${isSelf ? 'items-end' : 'items-start'}`}>
                   {/* Author Name + Time Metadata */}
                   <div className="flex items-center gap-1.5 px-1 select-none">
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-semibold text-textMuted">
                       {author.name}
                     </span>
-                    <span className="text-[9px] text-slate-600">
+                    <span className="text-[9px] text-textMuted/60">
                       {timeString}
                     </span>
                   </div>
 
                   {/* Bubble text */}
                   <div
-                    className={`mt-1 p-3 rounded-2xl text-xs leading-relaxed border ${
+                    className={`mt-1 p-3 rounded-card text-xs leading-relaxed border ${
                       isSelf
-                        ? 'bg-brand-600/10 border-brand-500/20 text-slate-200 rounded-tr-none'
-                        : 'bg-slate-950 border-white/5 text-slate-200 rounded-tl-none'
+                        ? 'bg-accent/5 border-accent/15 text-textPrimary rounded-tr-none'
+                        : 'bg-appBg border-borderSep text-textPrimary rounded-tl-none'
                     }`}
                   >
                     {formatCommentText(comment.text)}
@@ -245,7 +245,7 @@ function CommentSection({ taskId }) {
         
         {/* Autocomplete Dropdown */}
         {showMentions && filteredMembers.length > 0 && (
-          <div className="absolute bottom-full left-0 mb-2 w-60 rounded-xl bg-slate-900 border border-white/10 shadow-premium p-1.5 z-30 max-h-36 overflow-y-auto scrollbar-thin flex flex-col gap-1">
+          <div className="absolute bottom-full left-0 mb-2 w-60 rounded-card bg-cardBg border border-borderSep shadow-hover-subtle p-1.5 z-30 max-h-36 overflow-y-auto scrollbar-thin flex flex-col gap-1">
             {filteredMembers.map((member) => {
               const mUser = member.user || {};
               return (
@@ -253,7 +253,7 @@ function CommentSection({ taskId }) {
                   key={mUser._id}
                   type="button"
                   onClick={() => selectMention(mUser.name)}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-white/5 text-slate-300 hover:text-white transition-all flex items-center gap-2"
+                  className="w-full text-left px-2.5 py-1.5 rounded-btn text-xs hover:bg-[#232330]/50 text-textMuted hover:text-textPrimary transition-all flex items-center gap-2"
                 >
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white text-[8px]"
@@ -263,7 +263,7 @@ function CommentSection({ taskId }) {
                   </div>
                   <div className="truncate flex-1">
                     <span className="font-semibold">{mUser.name}</span>
-                    <span className="text-[10px] text-slate-500 ml-1.5 select-none font-medium">
+                    <span className="text-[10px] text-textMuted/50 ml-1.5 select-none font-semibold">
                       @{mUser.email?.split('@')[0]}
                     </span>
                   </div>
@@ -280,12 +280,12 @@ function CommentSection({ taskId }) {
           onChange={handleTextareaChange}
           placeholder="Write a comment, use @name to mention..."
           disabled={isSubmitting}
-          className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 focus:border-brand-500 focus:outline-none text-slate-200 text-xs placeholder-slate-600 resize-none transition-all duration-200 scrollbar-thin"
+          className="flex-1 px-4 py-2.5 rounded-input bg-appBg border border-borderSep focus:border-accent focus:outline-none text-textPrimary text-xs placeholder-textMuted/40 resize-none transition-all duration-200 scrollbar-thin"
         />
         <button
           type="submit"
           disabled={isSubmitting || !newCommentText.trim()}
-          className="p-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 active:scale-95 shadow-md shadow-brand-500/15"
+          className="p-2.5 rounded-btn bg-accent hover:bg-accent/90 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 active:scale-95"
           title="Send comment"
         >
           <svg className="w-4 h-4 transform rotate-90" fill="currentColor" viewBox="0 0 24 24">

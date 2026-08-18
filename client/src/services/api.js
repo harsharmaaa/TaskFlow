@@ -30,4 +30,25 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor to handle 401 Unauthorized errors (session expired/invalid token)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear invalid user token from localStorage
+      localStorage.removeItem('user');
+      // Redirect to login page if we aren't already on an auth page or the landing page
+      const currentPath = window.location.pathname;
+      if (
+        currentPath !== '/' &&
+        currentPath !== '/login' &&
+        currentPath !== '/register'
+      ) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

@@ -222,11 +222,7 @@ function BoardView() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-500/10 rounded-full filter blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full filter blur-[100px] pointer-events-none" />
-
+    <div className="min-h-screen bg-appBg text-textPrimary flex flex-col font-sans antialiased relative overflow-hidden">
       {/* Navigation Header */}
       <Navbar />
 
@@ -240,7 +236,7 @@ function BoardView() {
           <div className="flex items-center gap-3">
             <Link
               to="/dashboard"
-              className="p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95 flex-shrink-0"
+              className="p-2 rounded-btn bg-transparent border border-borderSep hover:border-textMuted/30 hover:bg-[#232330]/30 text-textMuted hover:text-textPrimary transition-all active:scale-95 flex-shrink-0"
               title="Back to Workspaces"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -249,17 +245,17 @@ function BoardView() {
             </Link>
             
             {isLoading && !currentBoard ? (
-              <div className="h-8 w-48 rounded bg-slate-800 animate-pulse" />
+              <div className="h-8 w-48 rounded bg-[#15151C] animate-pulse border border-borderSep" />
             ) : error ? (
-              <h1 className="text-2xl font-bold text-rose-500">Board Error</h1>
+              <h1 className="text-2xl font-semibold text-rose-500 tracking-tight">Board Error</h1>
             ) : (
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white select-none">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-textPrimary select-none">
                   {currentBoard?.title}
                 </h1>
                 {currentBoard && (
-                  <p className="text-[10px] text-slate-500 mt-1 select-none">
-                    Owner: <span className="text-slate-400 font-semibold">{currentBoard.owner?.name}</span>
+                  <p className="text-[10px] text-textMuted mt-1 select-none">
+                    Owner: <span className="text-textPrimary font-semibold">{currentBoard.owner?.name}</span>
                   </p>
                 )}
               </div>
@@ -272,39 +268,47 @@ function BoardView() {
               
               {/* Online Presence Stack */}
               {presence && presence.length > 0 && (
-                <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-3 py-1.5 shadow-sm">
+                <div className="flex items-center gap-2 bg-[#6366F1]/5 border border-[#6366F1]/15 rounded-full px-3 py-1.5 shadow-sm">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider mr-1 select-none">Online:</span>
+                  <span className="text-[9px] text-[#6366F1] font-bold uppercase tracking-wider mr-1 select-none">Online:</span>
                   <div className="flex -space-x-1.5 select-none">
-                    {presence.map((activeUser, idx) => (
-                      <div
-                        key={activeUser.socketId || idx}
-                        className="w-6 h-6 rounded-full border border-slate-950 flex items-center justify-center font-bold text-white text-[8px] transform hover:-translate-y-1 transition-transform cursor-help shadow-sm"
-                        style={{ backgroundColor: getMemberColor(activeUser) }}
-                        title={`${activeUser.name} is active`}
-                      >
-                        {getInitials(activeUser.name)}
-                      </div>
-                    ))}
+                    {presence.map((activeUser, idx) => {
+                      const isSelf = activeUser.userId === user?._id;
+                      return (
+                        <div
+                          key={activeUser.socketId || idx}
+                          className={`w-6 h-6 rounded-full border border-borderSep flex items-center justify-center font-bold text-white text-[8px] transform hover:-translate-y-1 transition-transform cursor-help shadow-sm relative ${
+                            isSelf ? 'ring-2 ring-accent/30 animate-pulse' : ''
+                          }`}
+                          style={{ backgroundColor: getMemberColor(activeUser) }}
+                          title={`${activeUser.name} is active ${isSelf ? '(You)' : ''}`}
+                        >
+                          {getInitials(activeUser.name)}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {/* Member Stack */}
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-slate-500 mr-1 select-none">Collaborators:</span>
+                <span className="text-xs text-textMuted mr-1 select-none font-semibold">Collaborators:</span>
                 <div className="flex -space-x-1.5 select-none">
                   {currentBoard.members?.map((member, idx) => {
                     const memberUser = member.user || {};
+                    const isSelf = memberUser._id === user?._id;
                     return (
                       <div
                         key={memberUser._id || idx}
-                        className="w-7 h-7 rounded-full border-2 border-slate-950 flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help"
+                        className={`w-7 h-7 rounded-full border-2 border-borderSep flex items-center justify-center font-bold text-white text-[9px] shadow-sm transform hover:-translate-y-1 transition-transform cursor-help relative ${
+                          isSelf ? 'ring-2 ring-accent/30 animate-pulse' : ''
+                        }`}
                         style={{ backgroundColor: memberUser.avatarColor || '#6366F1' }}
-                        title={`${memberUser.name} (${member.role})`}
+                        title={`${memberUser.name} (${member.role}) ${isSelf ? '(You)' : ''}`}
                       >
                         {getInitials(memberUser.name)}
                       </div>
@@ -318,13 +322,13 @@ function BoardView() {
                 <div className="flex items-center gap-2">
                   <Link
                     to={`/boards/${id}/team`}
-                    className="px-3.5 py-2 rounded-xl bg-slate-900 border border-white/5 hover:border-brand-500/20 text-slate-300 hover:text-white text-xs font-semibold hover:bg-slate-900/50 active:scale-95 transition-all duration-200"
+                    className="px-3.5 py-2 rounded-btn bg-cardBg border border-borderSep hover:border-textMuted/30 text-textMuted hover:text-textPrimary text-xs font-semibold active:scale-95 transition-all duration-200"
                   >
                     Manage Team
                   </Link>
                   <button
                     onClick={handleDeleteBoard}
-                    className="px-3.5 py-2 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 hover:border-rose-500/30 text-xs font-semibold active:scale-95 transition-all duration-200"
+                    className="px-3.5 py-2 rounded-btn border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/15 hover:border-rose-500/30 text-rose-400 hover:text-rose-500 text-xs font-semibold active:scale-95 transition-all duration-200"
                   >
                     Delete Board
                   </button>
@@ -353,8 +357,8 @@ function BoardView() {
 
         {/* Matches Count */}
         {currentBoard && !isLoading && hasActiveFilters && (
-          <div className="text-xs text-slate-400 mb-4 select-none px-1">
-            🎯 <span className="text-brand-400 font-bold">{totalMatches}</span> task{totalMatches === 1 ? '' : 's'} match{totalMatches === 1 ? 'es' : ''} your active filters
+          <div className="text-xs text-textMuted mb-4 select-none px-1">
+            🎯 <span className="text-accent font-bold">{totalMatches}</span> task{totalMatches === 1 ? '' : 's'} match{totalMatches === 1 ? 'es' : ''} your active filters
           </div>
         )}
 
@@ -363,11 +367,11 @@ function BoardView() {
           {isLoading && !currentBoard ? (
             <LoadingSpinner message="Loading board canvas..." />
           ) : error ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl border border-white/5 bg-white/[0.01] text-center py-20 min-h-[400px]">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 rounded-card border border-borderSep bg-cardBg text-center py-20 min-h-[400px]">
               <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 text-xl mb-4">⚠️</div>
-              <h3 className="text-lg font-bold text-white mb-1">Failed to fetch board</h3>
-              <p className="text-xs text-slate-400 max-w-xs mb-4">{error}</p>
-              <Link to="/dashboard" className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-white/10 hover:border-white/20 text-slate-200">
+              <h3 className="text-lg font-semibold text-textPrimary mb-1">Failed to fetch board</h3>
+              <p className="text-xs text-textMuted max-w-xs mb-4">{error}</p>
+              <Link to="/dashboard" className="px-4 py-2 rounded-btn border border-borderSep text-xs font-semibold hover:border-textMuted/30 text-textPrimary">
                 Back to workspaces
               </Link>
             </div>

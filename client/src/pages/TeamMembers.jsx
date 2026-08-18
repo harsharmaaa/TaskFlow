@@ -103,11 +103,7 @@ function TeamMembers() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-500/10 rounded-full filter blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full filter blur-[100px] pointer-events-none" />
-
+    <div className="min-h-screen bg-appBg text-textPrimary flex flex-col font-sans antialiased relative overflow-hidden">
       {/* Navigation Header */}
       <Navbar />
 
@@ -118,7 +114,7 @@ function TeamMembers() {
         <div className="flex items-center gap-3 mb-8">
           <Link
             to={`/boards/${id}`}
-            className="p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition-all active:scale-95 flex-shrink-0"
+            className="p-2 rounded-btn bg-transparent border border-borderSep hover:border-textMuted/30 hover:bg-[#232330]/30 text-textMuted hover:text-textPrimary transition-all active:scale-95 flex-shrink-0"
             title="Back to Board Canvas"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -126,10 +122,10 @@ function TeamMembers() {
             </svg>
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white select-none">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-textPrimary select-none">
               {currentBoard?.title || 'Loading Board'}
             </h1>
-            <p className="text-xs text-slate-500 mt-1 select-none">
+            <p className="text-xs text-textMuted mt-1 select-none">
               Team Collaborators and Workspaces Permissions
             </p>
           </div>
@@ -137,18 +133,18 @@ function TeamMembers() {
 
         {isLoading && !currentBoard ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
-            <svg className="animate-spin h-8 w-8 text-brand-500" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-8 w-8 text-accent" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <p className="text-sm text-slate-400">Loading team members...</p>
+            <p className="text-sm text-textMuted">Loading team members...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-12 bg-white/[0.01] border border-white/5 rounded-3xl p-8 max-w-md mx-auto">
+          <div className="text-center py-12 bg-cardBg border border-borderSep rounded-card p-8 max-w-md mx-auto">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 text-xl mx-auto mb-4">⚠️</div>
-            <h3 className="text-lg font-bold text-white mb-1">Failed to fetch details</h3>
-            <p className="text-xs text-slate-400 max-w-xs mb-4">{error}</p>
-            <Link to="/dashboard" className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-white/10 hover:border-white/20 text-slate-200">
+            <h3 className="text-lg font-semibold text-textPrimary mb-1">Failed to fetch details</h3>
+            <p className="text-xs text-textMuted max-w-xs mb-4">{error}</p>
+            <Link to="/dashboard" className="px-4 py-2 rounded-btn border border-borderSep text-xs font-semibold text-textPrimary">
               Back to dashboard
             </Link>
           </div>
@@ -157,16 +153,16 @@ function TeamMembers() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
             {/* Collaborators List (Left Column) */}
-            <div className="lg:col-span-2 rounded-2xl bg-white/[0.01] border border-white/5 p-6 shadow-glass space-y-6">
+            <div className="lg:col-span-2 rounded-card bg-cardBg border border-borderSep p-6 space-y-6 shadow-none">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">Board Collaborators</h2>
-                <span className="text-xs bg-slate-900 text-slate-400 px-3 py-1 rounded-full border border-white/5 font-semibold">
+                <h2 className="text-lg font-semibold text-textPrimary">Board Collaborators</h2>
+                <span className="text-xs bg-appBg text-textMuted px-3 py-1 rounded-full border border-borderSep font-semibold">
                   {currentBoard?.members?.length || 0} Total
                 </span>
               </div>
 
               {/* Members List */}
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-borderSep">
                 {currentBoard?.members?.map((member) => {
                   const mUser = member.user || {};
                   const isOwner = currentBoard.owner?._id === mUser._id;
@@ -185,15 +181,15 @@ function TeamMembers() {
                           {getInitials(mUser.name)}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-white flex items-center gap-2">
+                          <div className="text-sm font-semibold text-textPrimary flex items-center gap-2">
                             <span className="truncate">{mUser.name}</span>
                             {isSelf && (
-                              <span className="text-[9px] bg-brand-500/10 text-brand-400 border border-brand-500/20 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                              <span className="text-[9px] bg-accent/10 text-accent border border-accent/20 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                                 You
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 truncate mt-0.5">{mUser.email}</div>
+                          <div className="text-xs text-textMuted truncate mt-0.5">{mUser.email}</div>
                         </div>
                       </div>
 
@@ -205,7 +201,7 @@ function TeamMembers() {
                             value={member.role}
                             disabled={isBusy}
                             onChange={(e) => handleRoleChange(mUser._id, e.target.value)}
-                            className="bg-slate-900 border border-white/10 hover:border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none transition-all disabled:opacity-50"
+                            className="bg-appBg border border-borderSep hover:border-textMuted/30 rounded-input px-2.5 py-1.5 text-xs text-textPrimary focus:outline-none transition-all disabled:opacity-50"
                           >
                             <option value="Admin">Admin</option>
                             <option value="Manager">Manager</option>
@@ -220,7 +216,7 @@ function TeamMembers() {
                           <button
                             onClick={() => handleRemoveMember(mUser._id, mUser.name)}
                             disabled={isBusy}
-                            className="p-2 rounded-xl border border-rose-500/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-rose-400 disabled:opacity-50 transition-all"
+                            className="p-2 rounded-btn border border-rose-500/10 hover:border-rose-500/30 hover:bg-rose-500/10 text-rose-400 disabled:opacity-50 transition-all"
                             title={`Remove ${mUser.name} from board`}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
@@ -238,14 +234,14 @@ function TeamMembers() {
 
             {/* Invite Team Member Form (Right Column, only visible to Admin) */}
             {isAdmin && (
-              <div className="rounded-2xl bg-white/[0.01] border border-white/5 p-6 shadow-glass space-y-5">
-                <h2 className="text-lg font-bold text-white">Invite Collaborator</h2>
-                <p className="text-xs text-slate-400 leading-relaxed">
+              <div className="rounded-card bg-cardBg border border-borderSep p-6 space-y-5 shadow-none">
+                <h2 className="text-lg font-semibold text-textPrimary">Invite Collaborator</h2>
+                <p className="text-xs text-textMuted leading-relaxed">
                   Enter their email address to share access. The user will be added to the board workspace as a <strong>Member</strong> by default.
                 </p>
                 <form onSubmit={handleInvite} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label htmlFor="inviteEmail" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    <label htmlFor="inviteEmail" className="text-[10px] font-semibold text-textMuted uppercase tracking-wider block">
                       Email Address
                     </label>
                     <input
@@ -254,14 +250,14 @@ function TeamMembers() {
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       placeholder="e.g. colleague@company.com"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-white/10 focus:border-brand-500 focus:outline-none text-slate-200 text-xs placeholder-slate-600 transition-all duration-200"
+                      className="w-full px-4 py-2.5 rounded-input bg-appBg border border-borderSep focus:border-accent focus:outline-none text-textPrimary text-xs placeholder-textMuted/40 transition-all duration-200"
                       required
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isInviting}
-                    className="w-full py-2.5 rounded-xl font-semibold bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs disabled:opacity-50 transition-all shadow-md shadow-brand-500/10 flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-btn font-semibold bg-accent hover:bg-accent/90 text-white text-xs disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                   >
                     {isInviting ? (
                       <>
@@ -278,7 +274,6 @@ function TeamMembers() {
                 </form>
               </div>
             )}
-
           </div>
         )}
       </main>
